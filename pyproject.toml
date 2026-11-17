@@ -26,6 +26,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+    "httpx2>=2.0",  # preferred by Starlette's TestClient
     "pytest>=8.2",
     "pytest-cov>=5.0",
     "ruff>=0.5",
