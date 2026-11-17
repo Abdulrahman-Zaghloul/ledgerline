@@ -32,6 +32,9 @@ dev = [
     "mypy>=1.10",
 ]
 
+[project.scripts]
+ledgerline = "ledger.cli:main"
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/ledger"]
 
