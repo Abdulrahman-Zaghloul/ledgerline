@@ -48,6 +48,8 @@ services:
   relay:
     <<: *app
     command: ["ledgerline", "relay"]
+    healthcheck:
+      disable: true  # the image's HTTP check is for the API; the relay serves no HTTP
     depends_on:
       migrate:
         condition: service_completed_successfully
