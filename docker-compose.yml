@@ -1,5 +1,16 @@
-# Local PostgreSQL for development and tests.
-#   docker compose up -d db
+# Local stack: PostgreSQL, a one-shot migration job, the API and the outbox relay.
+#   docker compose up --build      then open http://localhost:8000/docs
+
+x-app: &app
+  build: .
+  environment:
+    LEDGER_ENVIRONMENT: development
+    LEDGER_DATABASE_URL: postgresql+psycopg://postgres:postgres@db:5432/ledger
+    LEDGER_JWT_SECRET: ${LEDGER_JWT_SECRET:-dev-only-secret-change-me-dev-only-secret}
+    LEDGER_TRANSFER_FEE_BPS: ${LEDGER_TRANSFER_FEE_BPS:-0}
+    LEDGER_LOG_JSON: "true"
+    LEDGER_WEBHOOK_URL: ${LEDGER_WEBHOOK_URL:-}
+    LEDGER_WEBHOOK_SECRET: ${LEDGER_WEBHOOK_SECRET:-}
 
 services:
   db:
@@ -18,6 +29,28 @@ services:
       interval: 2s
       timeout: 3s
       retries: 20
+
+  migrate:
+    <<: *app
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    <<: *app
+    ports:
+      - "8000:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  relay:
+    <<: *app
+    command: ["ledgerline", "relay"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
 
 volumes:
   pgdata:
